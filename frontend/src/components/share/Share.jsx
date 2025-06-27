@@ -16,7 +16,7 @@ export default function Share() {
     e.preventDefault();
 
     const newPost = {
-      userId: user.id, // _id → id に修正
+      userId: Number(user.id), // _id → id に修正
       desc: desc.current.value,
     };
 
@@ -39,7 +39,7 @@ export default function Share() {
       await axios.post(`/posts`, newPost);
       window.location.reload();
     } catch (err) {
-      console.log(err);
+      console.log(err.response?.data || err);
     }
   };
 

@@ -12,15 +12,23 @@ export default function TimeLine({ username }) {
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const response = username
-        ? await axios.get(`/posts/profile/${username}`) //プロフィールの場合
-        : await axios.get(`/posts/timeline/${user.id}`); // _id → id に修正
-      //console.log(response);
-      setPosts(
-        response.data.sort((post1, post2) => {
-          return new Date(post2.createdAt) - new Date(post1.createdAt);
-        })
-      );
+      try {
+        const response = username
+          ? await axios.get(`/posts/profile/${username}`) //プロフィールの場合
+          : await axios.get(`/posts/timeline/${user.id}`); // _id → id に修正
+        //console.log(response);
+        setPosts(
+          Array.isArray(response.data)
+            ? response.data.sort(
+                (post1, post2) =>
+                  new Date(post2.createdAt) - new Date(post1.createdAt)
+              )
+            : []
+        );
+      } catch (err) {
+        setPosts([]); // エラー時は空配列
+        console.error(err);
+      }
     };
     fetchPosts();
   }, [username, user.id]); // _id → id に修正

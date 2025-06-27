@@ -9,17 +9,25 @@ import { AuthContext } from "../../state/AuthContext";
 
 export default function Post({ post }) {
   const PUBLIC_FOLDER = process.env.REACT_APP_PUBLIC_FOLDER;
+  const { user: currentUser } = useContext(AuthContext);
 
+  // likes配列を前提にイイネ数・イイネ済み判定
   const [like, setLike] = useState(post.likes ? post.likes.length : 0);
   const [isLiked, setIsLiked] = useState(false);
   const [user, setUser] = useState({});
 
-  const { user: currentUser } = useContext(AuthContext);
+  useEffect(() => {
+    setIsLiked(
+      post.likes
+        ? post.likes.some((like) => like.userId === currentUser.id)
+        : false
+    );
+    setLike(post.likes ? post.likes.length : 0);
+  }, [post.likes, currentUser.id]);
 
   useEffect(() => {
     const fetchUser = async () => {
       const response = await axios.get(`/users?userId=${post.userId}`);
-      //console.log(response);
       setUser(response.data);
     };
     fetchUser();
@@ -27,14 +35,13 @@ export default function Post({ post }) {
 
   const handleLike = async () => {
     try {
-      //いいねのAPIを叩いていく
       await axios.put(`/posts/${post.id}/like`, { userId: currentUser.id });
+      // 楽観的UI更新（APIレスポンスで最新のlikes配列を返す場合はここでsetLike/setIsLikedを更新）
+      setLike(isLiked ? like - 1 : like + 1);
+      setIsLiked(!isLiked);
     } catch (err) {
       console.log(err);
     }
-
-    setLike(isLiked ? like - 1 : like + 1);
-    setIsLiked(!isLiked);
   };
 
   return (
